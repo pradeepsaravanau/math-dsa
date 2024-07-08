@@ -57,55 +57,59 @@ function scaleRect(rectangle, boundary) {
   const minBottom = bottomY - (y + height);
   const maxTop = y - topY;
 
-  const min = Math.min(minLeft, maxRight, minBottom, maxTop);
+  const mins = [
+    { val: minLeft, pos: "left" },
+    { val: maxRight, pos: "right" },
+    { val: maxTop, pos: "top" },
+    { val: minBottom, pos: "bottom" },
+  ].sort((a, b) => a.val - b.val);
 
   //AR - ASPECT RATION W - WIDTH , H - HEIGHT
   //AR = W1 / H1 = W2 / H2
 
-  let isWidthDefault = false;
-  if (
-    (minLeft < minBottom && minLeft < maxTop) ||
-    (maxRight < minBottom && maxRight < maxTop)
-  ) {
-    isWidthDefault = true;
+  let min = mins[0];
+
+  for (let i = 0; i < mins.length; i++) {
+    min = mins[i].val;
+    let isWidthDefault = ["left", "right"].includes(mins[i].pos);
+
+    let nw = 0;
+    let nh = 0;
+    let nx = 0;
+    let ny = 0;
+    if (isWidthDefault) {
+      nw = width + min * 2;
+      //retain aspect ratio based on the width modified fir height
+
+      nh = nw * (height / width);
+      nx = x - min;
+      ny = y - (nh - height) / 2;
+      if (ny < 0) {
+        continue;
+      }
+    } else {
+      nh = height + min * 2;
+
+      //retain aspect ratio based on the height modified for width
+      nw = nh * (width / height);
+
+      //moving y by x
+      ny = y - min;
+
+      //calculate x by new width - width /2 because we want similar kind of min for x
+      nx = x - (nw - width) / 2;
+
+      if (nx < 0) {
+        continue;
+      }
+    }
+    return {
+      height: nh,
+      width: nw,
+      x: nx,
+      y: ny,
+    };
   }
-
-  let nw = 0;
-  let nh = 0;
-  let nx = 0;
-  let ny = 0;
-  if (isWidthDefault) {
-    nw = width + min * 2;
-    //retain aspect ratio based on the width modified fir height
-
-    nh = nw * (height / width);
-    nx = x - min;
-    ny = y - (nh - height) / 2;
-  } else {
-    nh = height + min * 2;
-
-    //retain aspect ratio based on the height modified for width
-    nw = nh * (width / height);
-
-    //moving y by x
-    ny = y - min;
-
-    //calculate x by new width - width /2 because we want similar kind of min for x
-    nx = x - (nw - width) / 2;
-
-    console.log("addd", nx);
-  }
-
-  return {
-    minLeft,
-    maxRight,
-    minBottom,
-    maxTop,
-    height: nh,
-    width: nw,
-    x: nx,
-    y: ny,
-  };
 }
 
 // Example usage with your provided data
